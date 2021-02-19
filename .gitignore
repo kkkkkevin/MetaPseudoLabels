@@ -141,5 +141,4 @@ pretrained/
 .vscode/git.sh
 *.pth
 *.pt
-*.txt
 *.jpg

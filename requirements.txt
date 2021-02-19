@@ -1,0 +1,8 @@
+cython
+torch
+torchvision
+tensorboard
+pandas
+sklearn
+albumentations
+wandb
