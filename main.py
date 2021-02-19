@@ -124,6 +124,10 @@ def get_args():
     parser.add_argument('--evaluate',
                         action='store_true',
                         help='evaluate model on validation set')
+    parser.add_argument('--top-range',
+                        nargs="+",
+                        type=int,
+                        help="use it like this. --top-range 1 5")
     parser.add_argument('--seed', default=None, type=int,
                         help='seed for initializing training')
     parser.add_argument('--label-smoothing',
@@ -314,14 +318,19 @@ def main(args):
             loc = f'cuda:{args.gpu}'
             checkpoint = torch.load(args.resume, map_location=loc)
             args.start_step = checkpoint['step']
+
             args.best_top1 = checkpoint['best_top1']
             args.best_top5 = checkpoint['best_top5']
+
             t_optimizer.load_state_dict(checkpoint['teacher_optimizer'])
             s_optimizer.load_state_dict(checkpoint['student_optimizer'])
+
             t_scheduler.load_state_dict(checkpoint['teacher_scheduler'])
             s_scheduler.load_state_dict(checkpoint['student_scheduler'])
+
             t_scaler.load_state_dict(checkpoint['teacher_scaler'])
             s_scaler.load_state_dict(checkpoint['student_scaler'])
+
             try:
                 teacher_model.load_state_dict(checkpoint['teacher_state_dict'])
             except BaseException:

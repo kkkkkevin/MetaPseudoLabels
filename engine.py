@@ -255,7 +255,8 @@ def _train_loop(
                                    args.num_eval)
             # Test
             test_model = avg_student_model if avg_student_model is not None else student_model
-            _, top1, top5 = evaluate(args, test_loader, test_model, criterion)
+            _, top1, top5 = evaluate(
+                args, test_loader, test_model, criterion, args.top_range)
 
             is_best = top1 > args.best_top1
             if is_best:
@@ -487,12 +488,12 @@ def train_loop(
     return
 
 
-def evaluate(args, test_loader, model, criterion):
+def evaluate(args, test_loader, model, criterion, top_range=(1, 5)):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
-    top1 = AverageMeter()
-    top5 = AverageMeter()
+    top_high = AverageMeter()
+    top_low = AverageMeter()
     model.eval()
 
     test_iter = tqdm(test_loader, disable=args.local_rank not in [-1, 0])
@@ -509,23 +510,32 @@ def evaluate(args, test_loader, model, criterion):
                 output = model(images)
                 loss = criterion(output, targets)
 
-            acc1, acc5 = accuracy(output, targets, (1, 5))
+            acc_high, acc_low = accuracy(output, targets, top_range)
             losses.update(loss.item(), batch_size)
-            top1.update(acc1[0], batch_size)
-            top5.update(acc5[0], batch_size)
+            top_high.update(acc_high[0], batch_size)
+            top_low.update(acc_low[0], batch_size)
 
             batch_time.update(time.time() - end)
             end = time.time()
 
             test_iter.set_description(
-                f"Test Iter: {step+1:3}/{len(test_loader):3}. Data: {data_time.avg:.2f}s. "
-                f"Batch: {batch_time.avg:.2f}s. Loss: {losses.avg:.4f}. "
-                f"top1: {top1.avg:.2f}. top5: {top5.avg:.2f}. ")
+                f"Test Iter: {step+1:3}/{len(test_loader):3}. "
+                f"Data: {data_time.avg:.2f}s. "
+                f"Batch: {batch_time.avg:.2f}s. "
+                f"Loss: {losses.avg:.4f}. "
+                f"top{top_range[0]}: {top_high.avg:.2f}. "
+                f"top{top_range[1]}: {top_low.avg:.2f}. ")
 
         test_iter.close()
         if args.local_rank in [-1, 0]:
-            args.writer.add_scalar("test/loss", losses.avg, args.num_eval)
-            args.writer.add_scalar("test/acc@1", top1.avg, args.num_eval)
-            args.writer.add_scalar("test/acc@5", top5.avg, args.num_eval)
+            args.writer.add_scalar("test/loss",
+                                   losses.avg,
+                                   args.num_eval)
+            args.writer.add_scalar(f"test/acc@{top_range[0]}",
+                                   top_high.avg,
+                                   args.num_eval)
+            args.writer.add_scalar(f"test/acc@{top_range[1]}",
+                                   top_low.avg,
+                                   args.num_eval)
 
-        return losses.avg, top1.avg, top5.avg
+        return losses.avg, top_high.avg, top_low.avg
