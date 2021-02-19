@@ -50,7 +50,7 @@ def get_lemon_datasets(args):
         range(len(test_i)),
         test_i,
         test_l,
-        transform=get_transforms_val)
+        transform=get_transforms_val())
 
     return train_labeled_dataset, train_unlabeled_dataset, test_dataset
 
