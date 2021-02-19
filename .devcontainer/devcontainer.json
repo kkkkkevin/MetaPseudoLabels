@@ -1,0 +1,71 @@
+{
+    "name": "pytorch",
+    "dockerFile": "Dockerfile",
+    // Set *default* container specific settings.json values on container create.
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash",
+        "files.autoSave": "afterDelay",
+        "files.autoSaveDelay": 1000,
+        "python.pythonPath": "/usr/bin/python3",
+        "python.languageServer": "Jedi",
+        "python.linting.lintOnSave": true,
+        "python.linting.pylintEnabled": false,
+        "python.linting.flake8Enabled": true,
+        "python.linting.flake8Args": ["--ignore=W293, W504, E402", "--max-line-length=150", "--max-complexity=20"],
+        "python.formatting.provider": "autopep8",
+        "python.formatting.autopep8Args": ["--aggressive", "--aggressive", "--ignore=E402"],
+        "python.testing.unittestEnabled": true,
+        "python.testing.unittestArgs": ["-v", "-s", "./test", "-p", "test_*.py"],
+        "python.testing.pytestEnabled": false,
+        "python.testing.nosetestsEnabled": false,
+        "autoDocstring.docstringFormat": "google"
+    },
+    // Add the IDs of extensions you want installed when the container is created.
+    "extensions": [
+        "ms-python.python",
+        "donjayamanne.python-extension-pack",
+        "visualstudioexptteam.vscodeintellicode",
+        "knisterpeter.vscode-github",
+        "github.vscode-pull-request-github",
+        "hbenl.vscode-test-explorer",
+        "njpwerner.autodocstring",
+        "kevinrose.vsc-python-indent",
+        "littlefoxteam.vscode-python-test-adapter",
+        "shardulm94.trailing-spaces",
+        "dotjoshjohnson.xml",
+        "davidanson.vscode-markdownlint",
+        "eamodio.gitlens"],
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    "forwardPorts": [9000],
+    // Use 'postCreateCommand' to run commands after the container is created.
+    //"postCreateCommand": "pip3 install -r requirements.txt",
+    // Comment out to connect as root instead.
+    "remoteUser": "vscode",
+    // container run option
+    "runArgs": [
+        // GPU on
+        "--gpus",
+        "all",
+        // Memory size
+        "--shm-size",
+        "16G",
+        "--net",
+        "host",
+        // Display setting
+        "-e",
+        "DISPLAY=${env:DISPLAY}",
+        //"-e",
+        //"QT_X11_NO_MITSHM=1",
+        "--ipc",
+        "host",
+        "-v",
+        "/tmp/.X11-unix:/tmp/.X11-unix",
+        // Device setting
+        //"--device",
+        //"/dev/video0:/dev/video0",
+        // data volume
+        "--volumes-from",
+        "data_vol"
+    ],
+    "postCreateCommand": "sudo pip install -r requirements.txt; echo alias python='/usr/bin/python3.8' >> ~/.bashrc"
+}

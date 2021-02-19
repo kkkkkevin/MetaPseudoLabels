@@ -1,0 +1,71 @@
+{
+    // IntelliSense を使用して利用可能な属性を学べます。
+    // 既存の属性の説明をホバーして表示します。
+    // 詳細情報は次を確認してください: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: cifar10",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--seed", "5",
+                "--name", "cifar10@4000.5",
+                "--dataset", "cifar10",
+                "--num-classes", "10",
+                "--num-labeled", "4000",
+                "--expand-labels",
+                "--total-steps", "300000",
+                "--eval-step", "1000",
+                "--randaug", "2", "16",
+                "--batch-size", "64",
+                "--lr", "0.05",
+                "--weight-decay", "5e-4",
+                "--ema", "0.995",
+                "--nesterov",
+                "--mu", "7",
+                "--label-smoothing", "0.15",
+                "--temperature", "0.7",
+                "--threshold", "0.6",
+                "--lambda-u", "8",
+                "--warmup-steps", "5000",
+                "--uda-steps", "5000",
+                "--amp"
+            ],
+        },
+        {
+            "name": "Python: lemon",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--seed", "5",
+                "--name", "lemon@4000.5",
+                "--dataset", "lemon",
+                "--resize", "320",
+                "--num-classes", "4",
+                "--num-labeled", "80",
+                "--expand-labels",
+                "--total-steps", "30000",
+                "--eval-step", "100",
+                "--randaug", "2", "16",
+                "--batch-size", "64",
+                "--lr", "0.05",
+                "--weight-decay", "5e-4",
+                "--ema", "0.995",
+                "--nesterov",
+                "--mu", "7",
+                "--label-smoothing", "0.15",
+                "--temperature", "0.7",
+                "--threshold", "0.6",
+                "--lambda-u", "8",
+                "--warmup-steps", "5000",
+                "--uda-steps", "5000",
+                "--amp"
+            ],
+        }
+    ]
+}
