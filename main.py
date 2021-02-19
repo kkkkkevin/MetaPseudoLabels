@@ -29,142 +29,141 @@ logger = logging.getLogger(__name__)
 def get_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument(
-        '--name',
-        type=str,
-        required=True,
-        help='experiment name')
-    parser.add_argument(
-        '--data-path',
-        default='./data',
-        type=str,
-        help='data path')
-    parser.add_argument(
-        '--train-label-file-path',
-        default='/workspaces/data/ObjectClassify/lemon/train_images.csv',
-        type=str,
-        help='data path')
-    parser.add_argument(
-        '--save-path',
-        default='./checkpoint',
-        type=str,
-        help='save path')
-    parser.add_argument(
-        '--dataset',
-        default='cifar10',
-        type=str,
-        # choices=['cifar10', 'cifar100'],
-        help='dataset name')
-    parser.add_argument(
-        '--num-labeled',
-        type=int,
-        default=4000,
-        help='number of labeled data')
-    parser.add_argument("--expand-labels", action="store_true",
+    parser.add_argument('--name',
+                        type=str,
+                        required=True,
+                        help='experiment name')
+    parser.add_argument('--data-path',
+                        default='./data',
+                        type=str,
+                        help='data path')
+    parser.add_argument('--train-label-file-path',
+                        default='/workspaces/data/'
+                                'ObjectClassify/lemon/train_images.csv',
+                        type=str,
+                        help='data path')
+    parser.add_argument('--save-path',
+                        default='./checkpoint',
+                        type=str,
+                        help='save path')
+    parser.add_argument('--dataset',
+                        default='cifar10',
+                        type=str,
+                        # choices=['cifar10', 'cifar100'],
+                        help='dataset name')
+    parser.add_argument('--num-labeled',
+                        type=int,
+                        default=4000,
+                        help='number of labeled data')
+    parser.add_argument("--expand-labels",
+                        action="store_true",
                         help="expand labels to fit eval steps")
-    parser.add_argument(
-        '--total-steps',
-        default=300000,
-        type=int,
-        help='number of total steps to run')
-    parser.add_argument(
-        '--eval-step',
-        default=1000,
-        type=int,
-        help='number of eval steps to run')
-    parser.add_argument('--start-step', default=0, type=int,
+    parser.add_argument('--total-steps',
+                        default=300000,
+                        type=int,
+                        help='number of total steps to run')
+    parser.add_argument('--eval-step',
+                        default=1000,
+                        type=int,
+                        help='number of eval steps to run')
+    parser.add_argument('--start-step',
+                        default=0,
+                        type=int,
                         help='manual epoch number (useful on restarts)')
-    parser.add_argument(
-        '--workers',
-        default=8,
-        type=int,
-        help='number of workers')
-    parser.add_argument(
-        '--num-classes',
-        # default=10,
-        default=4,
-        type=int,
-        help='number of classes')
-    parser.add_argument(
-        '--dense-dropout',
-        default=0,
-        type=float,
-        help='dropout on last dense layer')
-    parser.add_argument('--resize', default=32, type=int, help='resize image')
-    parser.add_argument(
-        '--batch-size',
-        default=64,
-        type=int,
-        help='train batch size')
-    parser.add_argument('--lr', default=0.01, type=float, help='learning late')
-    parser.add_argument(
-        '--momentum',
-        default=0.9,
-        type=float,
-        help='SGD Momentum')
-    parser.add_argument('--nesterov', action='store_true', help='use nesterov')
-    parser.add_argument('--weight-decay', default=0, type=float)
-    parser.add_argument('--ema', default=0, type=float, help='EMA decay rate')
-    parser.add_argument(
-        '--warmup-steps',
-        default=0,
-        type=int,
-        help='warmup steps')
-    parser.add_argument(
-        '--grad-clip',
-        default=0.,
-        type=float,
-        help='gradient norm clipping')
-    parser.add_argument(
-        '--resume',
-        default='',
-        type=str,
-        help='path to checkpoint')
-    parser.add_argument(
-        '--evaluate',
-        action='store_true',
-        help='evaluate model on validation set')
+    parser.add_argument('--workers',
+                        default=8,
+                        type=int,
+                        help='number of workers')
+    parser.add_argument('--num-classes',
+                        # default=10,
+                        default=4,
+                        type=int,
+                        help='number of classes')
+    parser.add_argument('--dense-dropout',
+                        default=0,
+                        type=float,
+                        help='dropout on last dense layer')
+    parser.add_argument('--resize',
+                        default=32,
+                        type=int,
+                        help='resize image')
+    parser.add_argument('--batch-size',
+                        default=64,
+                        type=int,
+                        help='train batch size')
+    parser.add_argument('--lr',
+                        default=0.01,
+                        type=float,
+                        help='learning late')
+    parser.add_argument('--momentum',
+                        default=0.9,
+                        type=float,
+                        help='SGD Momentum')
+    parser.add_argument('--nesterov',
+                        action='store_true',
+                        help='use nesterov')
+    parser.add_argument('--weight-decay',
+                        default=0,
+                        type=float)
+    parser.add_argument('--ema',
+                        default=0,
+                        type=float,
+                        help='EMA decay rate')
+    parser.add_argument('--warmup-steps',
+                        default=0,
+                        type=int,
+                        help='warmup steps')
+    parser.add_argument('--grad-clip',
+                        default=0.,
+                        type=float,
+                        help='gradient norm clipping')
+    parser.add_argument('--resume',
+                        default='',
+                        type=str,
+                        help='path to checkpoint')
+    parser.add_argument('--evaluate',
+                        action='store_true',
+                        help='evaluate model on validation set')
     parser.add_argument('--seed', default=None, type=int,
                         help='seed for initializing training')
-    parser.add_argument(
-        '--label-smoothing',
-        default=0,
-        type=float,
-        help='label smoothing alpha')
-    parser.add_argument(
-        '--mu',
-        default=7,
-        type=int,
-        help='coefficient of unlabeled batch size')
-    parser.add_argument(
-        '--threshold',
-        default=0.95,
-        type=float,
-        help='pseudo label threshold')
-    parser.add_argument(
-        '--temperature',
-        default=1,
-        type=float,
-        help='pseudo label temperature')
-    parser.add_argument('--lambda-u', default=1, type=float,
+    parser.add_argument('--label-smoothing',
+                        default=0,
+                        type=float,
+                        help='label smoothing alpha')
+    parser.add_argument('--mu',
+                        default=7,
+                        type=int,
+                        help='coefficient of unlabeled batch size')
+    parser.add_argument('--threshold',
+                        default=0.95,
+                        type=float,
+                        help='pseudo label threshold')
+    parser.add_argument('--temperature',
+                        default=1,
+                        type=float,
+                        help='pseudo label temperature')
+    parser.add_argument('--lambda-u',
+                        default=1,
+                        type=float,
                         help='coefficient of unlabeled loss')
-    parser.add_argument(
-        '--uda-steps',
-        default=1,
-        type=float,
-        help='warmup steps of lambda-u')
-    parser.add_argument(
-        "--randaug",
-        nargs="+",
-        type=int,
-        help="use it like this. --randaug 2 10")
-    parser.add_argument(
-        "--amp",
-        action="store_true",
-        help="use 16-bit (mixed) precision")
-    parser.add_argument('--world-size', default=-1, type=int,
+    parser.add_argument('--uda-steps',
+                        default=1,
+                        type=float,
+                        help='warmup steps of lambda-u')
+    parser.add_argument("--randaug",
+                        nargs="+",
+                        type=int,
+                        help="use it like this. --randaug 2 10")
+    parser.add_argument("--amp",
+                        action="store_true",
+                        help="use 16-bit (mixed) precision")
+    parser.add_argument('--world-size',
+                        default=-1,
+                        type=int,
                         help='number of nodes for distributed training')
-    parser.add_argument("--local_rank", type=int, default=-1,
+    parser.add_argument("--local_rank",
+                        type=int,
+                        default=-1,
                         help="For distributed training: local_rank")
     return parser.parse_args()
 
