@@ -29,45 +29,45 @@ def train(
     images_aug = images_aug.to(args.device)
     targets = targets.to(args.device)
 
-    # Updating the Student
     with amp.autocast(enabled=args.amp):
         batch_size = images_l.shape[0]
 
-        # Forward
+        # Step1：After the teacher, get the output -----------------------------
         t_images = torch.cat((images_l, images_ori, images_aug))
         t_logits = teacher_model(t_images)
 
         t_logits_l = t_logits[:batch_size]
-        t_logits_uw, t_logits_us = t_logits[batch_size:].chunk(2)
+        t_logits_ori, t_logits_aug = t_logits[batch_size:].chunk(2)
         del t_logits
 
         t_loss_l = criterion(t_logits_l, targets)
 
         soft_pseudo_label = torch.softmax(
-            t_logits_uw.detach() / args.temperature, dim=-1)
+            t_logits_ori.detach() / args.temperature, dim=-1)
         max_probs, hard_pseudo_label = torch.max(soft_pseudo_label, dim=-1)
+
+        # *** 't_loss_uda' is used to calculate Teacher Loss in Step6 ***
         mask = max_probs.ge(args.threshold).float()
         t_loss_u = torch.mean(
             -(soft_pseudo_label * torch.log_softmax(
-                t_logits_us, dim=-1)).sum(dim=-1) * mask)
+                t_logits_aug, dim=-1)).sum(dim=-1) * mask)
         weight_u = args.lambda_u * min(1., (step + 1) / args.uda_steps)
         t_loss_uda = t_loss_l + weight_u * t_loss_u
 
-        # Forward
+        # Step2：1st call student model ----------------------------------------
         s_images = torch.cat((images_l, images_aug))
         s_logits = student_model(s_images)
 
-        s_logits_l = s_logits[:batch_size]
-        s_logits_us = s_logits[batch_size:]
+        s_logits_l = s_logits[:batch_size]  # label img
+        s_logits_aug = s_logits[batch_size:]  # aug img
         del s_logits
 
+        # Step3: Find the student's loss function -----------------------------
         s_loss_l_old = F.cross_entropy(s_logits_l.detach(), targets)
-        s_loss = criterion(s_logits_us, hard_pseudo_label)
+        s_loss = criterion(s_logits_aug, hard_pseudo_label)
 
-    # Backward
+    # Step4: Backpropagation, the parameters of the student update -----------
     s_scaler.scale(s_loss).backward()
-
-    # Optimize
     if args.grad_clip > 0:
         s_scaler.unscale_(s_optimizer)
         nn.utils.clip_grad_norm_(
@@ -76,33 +76,30 @@ def train(
     s_scaler.step(s_optimizer)
     s_scaler.update()
 
-    # Scheduler
     s_scheduler.step()
 
     if args.ema > 0:
         avg_student_model.update_parameters(student_model)
 
-    # Updating the Teacher
     with amp.autocast(enabled=args.amp):
-        # Forward
+        # Step5: 2nd call student ---------------------------------------------
         with torch.no_grad():
             s_logits_l = student_model(images_l)
 
+        # Step6: Find the teacher's loss function -----------------------------
         s_loss_l_new = F.cross_entropy(s_logits_l.detach(), targets)
 
         dot_product = s_loss_l_new - s_loss_l_old
         moving_dot_product = moving_dot_product * 0.99 + dot_product * 0.01
         dot_product = dot_product - moving_dot_product
-        _, hard_pseudo_label = torch.max(t_logits_us.detach(), dim=-1)
+        _, hard_pseudo_label = torch.max(t_logits_aug.detach(), dim=-1)
         t_loss_mpl = dot_product * F.cross_entropy(
-            t_logits_us,
+            t_logits_aug,
             hard_pseudo_label)
         t_loss = t_loss_uda + t_loss_mpl
 
-    # Backward
+    # Step7: Backpropagation, the parameters of the teacher update -----------
     t_scaler.scale(t_loss).backward()
-
-    # Optimize
     if args.grad_clip > 0:
         t_scaler.unscale_(t_optimizer)
         nn.utils.clip_grad_norm_(
@@ -111,7 +108,6 @@ def train(
     t_scaler.step(t_optimizer)
     t_scaler.update()
 
-    # Scheduler
     t_scheduler.step()
 
     teacher_model.zero_grad()
