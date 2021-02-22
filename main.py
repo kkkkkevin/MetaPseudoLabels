@@ -20,7 +20,8 @@ from engine import train, evaluate, train_finetune
 from datasets.data import DATASET_GETTERS
 from datasets.lemon_dataset import get_lemon_datasets
 from models.models import build_wideresnet, ModelEMA
-from utils.utils import AverageMeter, create_loss_fn, model_load_state_dict, save_checkpoint
+from utils.loss import create_loss_fn
+from utils.utils import AverageMeter, model_load_state_dict, save_checkpoint
 
 logger = logging.getLogger(__name__)
 
@@ -289,17 +290,17 @@ def train_loop(
                 images_l, targets = labeled_iter.next()
 
             try:
-                (images_uw, images_us), _ = unlabeled_iter.next()
+                (images_ori, images_aug), _ = unlabeled_iter.next()
             except BaseException:
                 if args.world_size > 1:
                     unlabeled_epoch += 1
                     unlabeled_loader.sampler.set_epoch(unlabeled_epoch)
                 unlabeled_iter = iter(unlabeled_loader)
-                (images_uw, images_us), _ = unlabeled_iter.next()
+                (images_ori, images_aug), _ = unlabeled_iter.next()
 
             s_loss, t_loss, t_loss_l, t_loss_u, t_loss_mpl, mask, t_optimizer, s_optimizer = train(
                 args, step,
-                images_l, images_uw, images_us,
+                images_l, images_ori, images_aug,
                 targets,
                 teacher_model, student_model,
                 avg_student_model,
@@ -595,6 +596,7 @@ def main(args):
             checkpoint = torch.load(args.resume, map_location=loc)
             args.best_top1 = checkpoint['best_top1'].to(torch.device('cpu'))
             args.best_top5 = checkpoint['best_top5'].to(torch.device('cpu'))
+
             if not (args.evaluate or args.finetune):
                 args.start_step = checkpoint['step']
                 t_optimizer.load_state_dict(checkpoint['teacher_optimizer'])

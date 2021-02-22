@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def train(
         args, step,
-        images_l, images_uw, images_us,
+        images_l, images_ori, images_aug,
         targets,
         teacher_model, student_model,
         avg_student_model,
@@ -25,8 +25,8 @@ def train(
         moving_dot_product):
 
     images_l = images_l.to(args.device)
-    images_uw = images_uw.to(args.device)
-    images_us = images_us.to(args.device)
+    images_ori = images_ori.to(args.device)
+    images_aug = images_aug.to(args.device)
     targets = targets.to(args.device)
 
     # Updating the Student
@@ -34,7 +34,7 @@ def train(
         batch_size = images_l.shape[0]
 
         # Forward
-        t_images = torch.cat((images_l, images_uw, images_us))
+        t_images = torch.cat((images_l, images_ori, images_aug))
         t_logits = teacher_model(t_images)
 
         t_logits_l = t_logits[:batch_size]
@@ -54,7 +54,7 @@ def train(
         t_loss_uda = t_loss_l + weight_u * t_loss_u
 
         # Forward
-        s_images = torch.cat((images_l, images_us))
+        s_images = torch.cat((images_l, images_aug))
         s_logits = student_model(s_images)
 
         s_logits_l = s_logits[:batch_size]
