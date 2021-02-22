@@ -340,23 +340,23 @@ def train_loop(
         # if ((eval_cnt + 1) * args.eval_step) % args.eval_step == 0:
         if args.local_rank in [-1, 0]:
             args.writer.add_scalar(
-                "train/1.s_loss",
+                "train/1.student_loss",
                 s_losses.avg,
                 args.num_eval)
             args.writer.add_scalar(
-                "train/2.t_loss",
+                "train/2.teacher_loss",
                 t_losses.avg,
                 args.num_eval)
             args.writer.add_scalar(
-                "train/3.t_labeled",
+                "train/3.teacher_loss_labeled",
                 t_losses_l.avg,
                 args.num_eval)
             args.writer.add_scalar(
-                "train/4.t_unlabeled",
+                "train/4.teacher_loss_unlabeled",
                 t_losses_u.avg,
                 args.num_eval)
             args.writer.add_scalar(
-                "train/5.t_mpl",
+                "train/5.teacher_loss_mpl",
                 t_losses_mpl.avg,
                 args.num_eval)
             args.writer.add_scalar(
