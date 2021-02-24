@@ -6,8 +6,9 @@
         "terminal.integrated.shell.linux": "/bin/bash",
         "files.autoSave": "afterDelay",
         "files.autoSaveDelay": 1000,
-        "python.pythonPath": "/usr/bin/python3",
-        "python.languageServer": "Jedi",
+        "python.pythonPath": "/usr/bin/python",
+        "python.languageServer": "Pylance",
+        "python.analysis.typeCheckingMode": "basic",
         "python.linting.lintOnSave": true,
         "python.linting.pylintEnabled": false,
         "python.linting.flake8Enabled": true,
@@ -22,19 +23,33 @@
     },
     // Add the IDs of extensions you want installed when the container is created.
     "extensions": [
+        // Python
         "ms-python.python",
-        "donjayamanne.python-extension-pack",
+        "ms-toolsai.jupyter",
+        // Visualize
+        "oderwat.indent-rainbow",
+        "mosapride.zenkaku", // for japanese
+        "shardulm94.trailing-spaces",
+        // Code formatting
+        "kevinrose.vsc-python-indent",
+        "prettier.prettier-vscode",
+        // Coding support
         "visualstudioexptteam.vscodeintellicode",
+        "njpwerner.autodocstring",
+        "ms-python.vscode-pylance",
+        // Develop support
         "knisterpeter.vscode-github",
         "github.vscode-pull-request-github",
-        "hbenl.vscode-test-explorer",
-        "njpwerner.autodocstring",
-        "kevinrose.vsc-python-indent",
-        "littlefoxteam.vscode-python-test-adapter",
-        "shardulm94.trailing-spaces",
-        "dotjoshjohnson.xml",
+        "eamodio.gitlens",
+        "gruntfuggly.todo-tree",
         "davidanson.vscode-markdownlint",
-        "eamodio.gitlens"],
+        // Debug support
+        //"formulahendry.code-runner",
+        "dongli.python-preview",
+        // Test support
+        "littlefoxteam.vscode-python-test-adapter"
+        //"hbenl.vscode-test-explorer"
+    ],
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     "forwardPorts": [9000],
     // Use 'postCreateCommand' to run commands after the container is created.
@@ -67,5 +82,5 @@
         "--volumes-from",
         "data_vol"
     ],
-    "postCreateCommand": "sudo pip install -r requirements.txt; echo alias python='/usr/bin/python3.8' >> ~/.bashrc"
+    "postCreateCommand": "sudo pip install -r requirements.txt" //; echo alias python='/usr/bin/python3.8' >> ~/.bashrc"
 }
