@@ -124,7 +124,7 @@ class TransformMPL(object):
             transforms.RandomCrop(size=args.resize,
                                   padding=int(args.resize * 0.125),
                                   padding_mode='reflect'),
-            RandAugment(n=n, m=m)])
+            RandAugment(args, n=n, m=m)])
         self.normalize = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize(mean=mean, std=std)])

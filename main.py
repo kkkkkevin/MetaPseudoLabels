@@ -28,16 +28,8 @@ logger = logging.getLogger(__name__)
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--seed',
-                        default=None,
-                        type=int,
-                        help='seed for initializing training')
-    parser.add_argument("--amp",
-                        action="store_true",
-                        help="use 16-bit (mixed) precision")
 
-
-    # Run mode option
+    # Run mode option --------------------------------------------------------
     parser.add_argument('--evaluate',
                         action='store_true',
                         help='only evaluate model on validation set')
@@ -45,7 +37,7 @@ def get_args():
                         action='store_true',
                         help='only finetune model on labeled dataset')
 
-    # Savedir setting
+    # Savedir setting --------------------------------------------------------
     parser.add_argument('--name',
                         type=str,
                         required=True,
@@ -59,12 +51,15 @@ def get_args():
                         type=str,
                         help='save path')
 
-    # Dataset Setting
+    # Dataset Setting --------------------------------------------------------
     parser.add_argument('--dataset',
                         default='cifar10',
                         type=str,
-                        # choices=['cifar10', 'cifar100'],
                         help='dataset name')
+    parser.add_argument('--num-labeled',
+                        type=int,
+                        default=4000,
+                        help='number of labeled data')
     parser.add_argument('--train-label-file-path',
                         default='/workspaces/data/'
                         'ObjectClassify/lemon/train_images.csv',
@@ -75,30 +70,37 @@ def get_args():
                         default=4,
                         type=int,
                         help='number of classes')
-    parser.add_argument('--num-labeled',
-                        type=int,
-                        default=4000,
-                        help='number of labeled data')
-    parser.add_argument("--expand-labels",
-                        action="store_true",
-                        help="expand labels to fit eval steps")
+
+    # Dataset params ---------------------------------------------------------
+    parser.add_argument('--expand-labels',
+                        action='store_true',
+                        help='expand labels to fit eval steps')
     parser.add_argument('--top-range',
-                        nargs="+",
+                        nargs='+',
+                        default=[1, 4],
                         type=int,
-                        help="use it like this. --top-range 1 5")
+                        help='use it like this. --top-range 1 5')
 
-
-    # augument params
-    parser.add_argument("--randaug",
-                        nargs="+",
+    # Augument params --------------------------------------------------------
+    parser.add_argument('--randaug',
+                        nargs='+',
+                        default=[2, 10],
                         type=int,
-                        help="use it like this. --randaug 2 10")
+                        help='use it like this. --randaug 2 10')
     parser.add_argument('--resize',
                         default=32,
                         type=int,
                         help='resize image')
-
-    # Train params
+    parser.add_argument('--brightness',
+                        nargs='+',
+                        default=[1.8, 0.1],
+                        type=float,
+                        help='SGD Momentum')
+    # Train setting ----------------------------------------------------------
+    parser.add_argument('--resume',
+                        default='',
+                        type=str,
+                        help='path to checkpoint')
     parser.add_argument('--total-steps',
                         default=300000,
                         type=int,
@@ -123,20 +125,24 @@ def get_args():
                         default=7,
                         type=int,
                         help='coefficient of unlabeled batch size')
-    parser.add_argument('--resume',
-                        default='',
-                        type=str,
-                        help='path to checkpoint')
     parser.add_argument('--world-size',
                         default=-1,
                         type=int,
                         help='number of nodes for distributed training')
-    parser.add_argument("--local_rank",
+    parser.add_argument('--local_rank',
                         type=int,
                         default=-1,
-                        help="For distributed training: local_rank")
+                        help='For distributed training: local_rank')
+    # Train params -----------------------------------------------------------
+    parser.add_argument('--seed',
+                        default=42,
+                        type=int,
+                        help='seed for initializing training')
+    parser.add_argument('--amp',
+                        action='store_true',
+                        help='use 16-bit (mixed) precision')
 
-    # Optim params
+    # Optim params -----------------------------------------------------------
     parser.add_argument('--weight-decay',
                         default=0,
                         type=float,
@@ -157,7 +163,7 @@ def get_args():
                         type=int,
                         help='warmup steps')
 
-    # Model setting
+    # Model params -----------------------------------------------------------
     parser.add_argument('--dense-dropout',
                         default=0,
                         type=float,
@@ -167,7 +173,7 @@ def get_args():
                         type=float,
                         help='EMA decay rate')
 
-    # Finetune params
+    # Finetune params --------------------------------------------------------
     parser.add_argument('--finetune-epochs',
                         default=10,
                         type=int,
@@ -189,7 +195,7 @@ def get_args():
                         type=float,
                         help='finetune SGD Momentum')
 
-    # Loss
+    # Loss params ------------------------------------------------------------
     parser.add_argument('--threshold',
                         default=0.95,
                         type=float,

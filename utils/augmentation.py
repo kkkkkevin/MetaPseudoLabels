@@ -183,7 +183,7 @@ def _int_parameter(v, max_v):
     return int(v * max_v / PARAMETER_MAX)
 
 
-def rand_augment_pool():
+def rand_augment_pool(args):
     augs = [
         (AutoContrast, None, None),
         (Brightness, 1.8, 0.1),
@@ -205,14 +205,14 @@ def rand_augment_pool():
 
 
 class RandAugment(object):
-    def __init__(self, n, m, resample_mode=Image.BILINEAR):
+    def __init__(self, args, n, m, resample_mode=Image.BILINEAR):
         assert n >= 1
         assert m >= 1
         global RESAMPLE_MODE
         RESAMPLE_MODE = resample_mode
         self.n = n
         self.m = m
-        self.augment_pool = rand_augment_pool()
+        self.augment_pool = rand_augment_pool(args)
 
     def __call__(self, img):
         ops = random.choices(self.augment_pool, k=self.n)
