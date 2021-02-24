@@ -64,8 +64,13 @@ class BasicBlock(nn.Module):
             bias=False)
         self.bn2 = nn.BatchNorm2d(out_planes, momentum=0.001)
         self.relu2 = nn.LeakyReLU(negative_slope=0.1, inplace=True)
-        self.conv2 = nn.Conv2d(out_planes, out_planes, kernel_size=3, stride=1,
-                               padding=1, bias=False)
+        self.conv2 = nn.Conv2d(
+            out_planes,
+            out_planes,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            bias=False)
         self.dropout = dropout
         self.equalInOut = (in_planes == out_planes)
         self.convShortcut = (
@@ -152,8 +157,8 @@ class WideResNet(nn.Module):
         n = (depth - 4) / 6
         block = BasicBlock
         # 1st conv before any network block
-        self.conv1 = nn.Conv2d(3, channels[0], kernel_size=3, stride=1,
-                               padding=1, bias=False)
+        self.conv1 = nn.Conv2d(
+            3, channels[0], kernel_size=3, stride=1, padding=1, bias=False)
         # 1st block
         self.block1 = NetworkBlock(
             n,
@@ -178,9 +183,10 @@ class WideResNet(nn.Module):
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight,
-                                        mode='fan_out',
-                                        nonlinearity='leaky_relu')
+                nn.init.kaiming_normal_(
+                    m.weight,
+                    mode='fan_out',
+                    nonlinearity='leaky_relu')
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1.0)
                 nn.init.constant_(m.bias, 0.0)
@@ -200,13 +206,41 @@ class WideResNet(nn.Module):
 
 
 def build_wideresnet(args, depth, widen_factor):
-    model = WideResNet(num_classes=args.num_classes,
-                       depth=depth,
-                       widen_factor=widen_factor,
-                       dropout=0,
-                       dense_dropout=args.dense_dropout)
+    model = WideResNet(
+        num_classes=args.num_classes,
+        depth=depth,
+        widen_factor=widen_factor,
+        dropout=0,
+        dense_dropout=args.dense_dropout)
+
     if args.local_rank in [-1, 0]:
         logger.info(f"Model: WideResNet {depth}x{widen_factor}")
         logger.info(
             f"Total params: {sum(p.numel() for p in model.parameters())/1e6:.2f}M")
+
+    return model
+
+
+def build_wideresnet_hub(
+        num_class: int,
+        name='wide_resnet50_2',
+        pretrained=True):
+    """[summary]
+    Normalized
+    mean = [0.485, 0.456, 0.406]
+    std = [0.229, 0.224, 0.225]
+
+    Args:
+        name (str, optional): [description]. Defaults to 'wide_resnet50_2'.
+        pretrained (bool, optional): [description]. Defaults to True.
+    """
+
+    model = torch.hub.load(
+        'pytorch/vision:v0.6.0',
+        name,
+        pretrained=pretrained)
+
+    num_ftrs = model.fc.in_features
+    model.fc = nn.Linear(num_ftrs, num_class)
+
     return model
