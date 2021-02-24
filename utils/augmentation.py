@@ -34,6 +34,8 @@ def Contrast(img, v, max_v, bias=0):
 
 
 def Cutout(img, v, max_v, **kwarg):
+    """ UnUsed
+    """
     if v == 0:
         return img
     v = _float_parameter(v, max_v)
@@ -75,6 +77,8 @@ def Equalize(img, **kwarg):
 
 
 def Identity(img, **kwarg):
+    """ UnUsed
+    """
     return img
 
 
@@ -175,11 +179,11 @@ def TranslateYConst(img, v, max_v, **kwarg):
         RESAMPLE_MODE)
 
 
-def _float_parameter(v, max_v):
+def _float_parameter(v, max_v) -> float:
     return float(v) * max_v / PARAMETER_MAX
 
 
-def _int_parameter(v, max_v):
+def _int_parameter(v, max_v) -> int:
     return int(v * max_v / PARAMETER_MAX)
 
 
@@ -209,8 +213,8 @@ class RandAugment(object):
     def __init__(
             self,
             args,
-            n: int,
-            m: int,
+            n: int = 2,
+            m: int = 10,
             resample_mode=Image.BILINEAR) -> None:
         assert n >= 1
         assert m >= 1

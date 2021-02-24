@@ -10,8 +10,10 @@ from utils.augmentation import RandAugment
 
 logger = logging.getLogger(__name__)
 
-cifar10_mean = (0.4914, 0.4822, 0.4465)
-cifar10_std = (0.2471, 0.2435, 0.2616)
+# cifar10_mean = (0.4914, 0.4822, 0.4465)
+# cifar10_std = (0.2471, 0.2435, 0.2616)
+cifar10_mean = [0.485, 0.456, 0.406]
+cifar10_std = [0.229, 0.224, 0.225]
 cifar100_mean = (0.5071, 0.4867, 0.4408)
 cifar100_std = (0.2675, 0.2565, 0.2761)
 normal_mean = (0.5, 0.5, 0.5)
@@ -23,9 +25,10 @@ def get_cifar10(args):
     """
     transform_labeled = transforms.Compose([
         transforms.RandomHorizontalFlip(),
-        transforms.RandomCrop(size=args.resize,
-                              padding=int(args.resize * 0.125),
-                              padding_mode='reflect'),
+        transforms.RandomCrop(
+            size=args.resize,
+            padding=int(args.resize * 0.125),
+            padding_mode='reflect'),
         transforms.ToTensor(),
         transforms.Normalize(mean=cifar10_mean, std=cifar10_std)
     ])
@@ -59,9 +62,10 @@ def get_cifar100(args):
 
     transform_labeled = transforms.Compose([
         transforms.RandomHorizontalFlip(),
-        transforms.RandomCrop(size=args.resize,
-                              padding=int(args.resize * 0.125),
-                              padding_mode='reflect'),
+        transforms.RandomCrop(
+            size=args.resize,
+            padding=int(args.resize * 0.125),
+            padding_mode='reflect'),
         transforms.ToTensor(),
         transforms.Normalize(mean=cifar100_mean, std=cifar100_std)])
 
@@ -84,8 +88,9 @@ def get_cifar100(args):
         transform=TransformMPL(args, mean=cifar100_mean, std=cifar100_std)
     )
 
-    test_dataset = datasets.CIFAR100(args.data_path, train=False,
-                                     transform=transform_val, download=False)
+    test_dataset = datasets.CIFAR100(
+        args.data_path, train=False,
+        transform=transform_val, download=False)
 
     return train_labeled_dataset, train_unlabeled_dataset, test_dataset
 
@@ -116,14 +121,16 @@ class TransformMPL(object):
         n, m = args.randaug
         self.ori = transforms.Compose([
             transforms.RandomHorizontalFlip(),
-            transforms.RandomCrop(size=args.resize,
-                                  padding=int(args.resize * 0.125),
-                                  padding_mode='reflect')])
+            transforms.RandomCrop(
+                size=args.resize,
+                padding=int(args.resize * 0.125),
+                padding_mode='reflect')])
         self.aug = transforms.Compose([
             transforms.RandomHorizontalFlip(),
-            transforms.RandomCrop(size=args.resize,
-                                  padding=int(args.resize * 0.125),
-                                  padding_mode='reflect'),
+            transforms.RandomCrop(
+                size=args.resize,
+                padding=int(args.resize * 0.125),
+                padding_mode='reflect'),
             RandAugment(args, n=n, m=m)])
         self.normalize = transforms.Compose([
             transforms.ToTensor(),
@@ -136,13 +143,15 @@ class TransformMPL(object):
 
 
 class CIFAR10SSL(datasets.CIFAR10):
-    def __init__(self, root, indexs, train=True,
-                 transform=None, target_transform=None,
-                 download=False):
-        super().__init__(root, train=train,
-                         transform=transform,
-                         target_transform=target_transform,
-                         download=download)
+    def __init__(
+            self, root, indexs, train=True,
+            transform=None, target_transform=None,
+            download=False):
+        super().__init__(
+            root, train=train,
+            transform=transform,
+            target_transform=target_transform,
+            download=download)
         if indexs is not None:
             self.data = self.data[indexs]
             self.targets = np.array(self.targets)[indexs]
@@ -161,13 +170,15 @@ class CIFAR10SSL(datasets.CIFAR10):
 
 
 class CIFAR100SSL(datasets.CIFAR100):
-    def __init__(self, root, indexs, train=True,
-                 transform=None, target_transform=None,
-                 download=False):
-        super().__init__(root, train=train,
-                         transform=transform,
-                         target_transform=target_transform,
-                         download=download)
+    def __init__(
+            self, root, indexs, train=True,
+            transform=None, target_transform=None,
+            download=False):
+        super().__init__(
+            root, train=train,
+            transform=transform,
+            target_transform=target_transform,
+            download=download)
         if indexs is not None:
             self.data = self.data[indexs]
             self.targets = np.array(self.targets)[indexs]
@@ -185,5 +196,7 @@ class CIFAR100SSL(datasets.CIFAR100):
         return img, target
 
 
-DATASET_GETTERS = {'cifar10': get_cifar10,
-                   'cifar100': get_cifar100}
+DATASET_GETTERS = {
+    'cifar10': get_cifar10,
+    'cifar100': get_cifar100
+}
