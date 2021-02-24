@@ -19,11 +19,12 @@ def get_lemon_datasets(args):
     img_paths = df_label['file_name'].values
     labels = df_label['label'].values
 
-    train_i, test_i, train_l, test_l = train_test_split(img_paths, labels,
-                                                        test_size=102,
-                                                        shuffle=True,
-                                                        random_state=args.seed,
-                                                        stratify=labels)
+    train_i, test_i, train_l, test_l = train_test_split(
+        img_paths, labels,
+        test_size=102,
+        shuffle=True,
+        random_state=args.seed,
+        stratify=labels)
 
     # divide train into label, unlabel
     train_labeled_idxs, train_unlabeled_idxs = x_u_split(
@@ -123,20 +124,25 @@ class TransformMPL(object):
         n, m = randaug
         self.ori = Compose([
             RandomHorizontalFlip(),
-            RandomCrop(size=resize,
-                       padding=int(resize * 0.125),
-                       padding_mode='reflect')])
+            RandomCrop(
+                size=resize,
+                padding=int(resize * 0.125),
+                padding_mode='reflect')
+        ])
 
         self.aug = Compose([
             RandomHorizontalFlip(),
-            RandomCrop(size=resize,
-                       padding=int(resize * 0.125),
-                       padding_mode='reflect'),
-            RandAugment(n=n, m=m)])
+            RandomCrop(
+                size=resize,
+                padding=int(resize * 0.125),
+                padding_mode='reflect'),
+            RandAugment(n=n, m=m)
+        ])
 
         self.normalize = Compose([
             ToTensor(),
-            Normalize(mean=mean, std=std)])
+            Normalize(mean=mean, std=std)
+        ])
 
     def __call__(self, x):
         ori = self.ori(x)
@@ -147,9 +153,11 @@ class TransformMPL(object):
 def get_transforms_labeled(resize):
     return Compose([
         RandomHorizontalFlip(),
-        RandomCrop(size=resize,
-                   padding=int(resize * 0.125),
-                   padding_mode='reflect'),
+        RandomCrop(
+            size=resize,
+            padding=int(resize * 0.125),
+            padding_mode='reflect'
+        ),
         ToTensor(),
         Normalize(mean=cifar10_mean, std=cifar10_std)
     ])
