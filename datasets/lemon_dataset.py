@@ -46,7 +46,11 @@ def get_lemon_datasets(args):
         train_i,
         train_l,
         transform=TransformMPL(
-            args, args.randaug, args.resize, mean=cifar10_mean, std=cifar10_std))
+            args,
+            args.randaug,
+            args.resize,
+            mean=cifar10_mean,
+            std=cifar10_std))
     test_dataset = LemonDataset(
         range(len(test_i)),
         test_i,
@@ -120,7 +124,14 @@ class LemonDataset(Dataset):
 
 
 class TransformMPL(object):
-    def __init__(self, args, randaug, resize, mean, std):
+    def __init__(
+            self,
+            args,
+            randaug: tuple,
+            resize: int,
+            mean: tuple,
+            std: tuple
+    ) -> None:
         n, m = randaug
         self.ori = Compose([
             RandomHorizontalFlip(),
@@ -150,7 +161,7 @@ class TransformMPL(object):
         return self.normalize(ori), self.normalize(aug)
 
 
-def get_transforms_labeled(resize):
+def get_transforms_labeled(resize: int) -> Compose:
     return Compose([
         RandomHorizontalFlip(),
         RandomCrop(
@@ -163,7 +174,7 @@ def get_transforms_labeled(resize):
     ])
 
 
-def get_transforms_val():
+def get_transforms_val() -> Compose:
     return Compose([
         ToTensor(),
         Normalize(mean=cifar10_mean, std=cifar10_std)

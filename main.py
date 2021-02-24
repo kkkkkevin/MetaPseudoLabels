@@ -95,7 +95,8 @@ def get_args():
                         nargs='+',
                         default=[1.8, 0.1],
                         type=float,
-                        help='SGD Momentum')
+                        help='brightnes params [max_v, bias]')
+
     # Train setting ----------------------------------------------------------
     parser.add_argument('--resume',
                         default='',
