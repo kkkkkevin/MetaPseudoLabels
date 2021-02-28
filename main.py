@@ -616,17 +616,21 @@ def main(args):
         }
     ]
 
-    t_optimizer = optim.SGD(teacher_parameters,
-                            lr=args.lr,
-                            momentum=args.momentum,
-                            nesterov=args.nesterov)
-    s_optimizer = optim.SGD(student_parameters,
-                            lr=args.lr,
-                            momentum=args.momentum,
-                            nesterov=args.nesterov)
+    t_optimizer = optim.SGD(
+        teacher_parameters,
+        lr=args.lr,
+        momentum=args.momentum,
+        nesterov=args.nesterov)
+    s_optimizer = optim.SGD(
+        student_parameters,
+        lr=args.lr,
+        momentum=args.momentum,
+        nesterov=args.nesterov)
 
     t_scheduler = get_cosine_schedule_with_warmup(
-        t_optimizer, args.warmup_steps, args.total_steps)
+        t_optimizer,
+        args.warmup_steps,
+        args.total_steps)
     s_scheduler = get_cosine_schedule_with_warmup(
         s_optimizer,
         args.warmup_steps,
