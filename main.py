@@ -241,12 +241,13 @@ def set_seed(args):
     manual_seed_all(args.seed)
 
 
-def get_cosine_schedule_with_warmup(optimizer,
-                                    num_warmup_steps,
-                                    num_training_steps,
-                                    num_wait_steps=0,
-                                    num_cycles=0.5,
-                                    last_epoch=-1):
+def get_cosine_schedule_with_warmup(
+        optimizer,
+        num_warmup_steps,
+        num_training_steps,
+        num_wait_steps=0,
+        num_cycles=0.5,
+        last_epoch=-1):
     def lr_lambda(current_step):
         if current_step < num_wait_steps:
             return 0.0
@@ -304,8 +305,9 @@ def train_loop(
     labeled_iter = iter(labeled_loader)
     unlabeled_iter = iter(unlabeled_loader)
 
-    for eval_cnt in range(args.start_step,
-                          (args.total_steps // args.eval_step)):
+    for eval_cnt in range(
+            args.start_step,
+            (args.total_steps // args.eval_step)):
         batch_time = AverageMeter()
         s_losses = AverageMeter()
         t_losses = AverageMeter()
@@ -440,21 +442,10 @@ def train_loop(
                 'student_scaler': s_scaler.state_dict(),
             }, is_best)
 
-    # finetune
     del t_scaler, t_scheduler, t_optimizer, teacher_model, unlabeled_loader
     del s_scaler, s_scheduler, s_optimizer
-    ckpt_name = f'{args.save_path}/{args.name}_best.pth.tar'
-    loc = f'cuda:{args.gpu}'
-    checkpoint = torch.load(ckpt_name, map_location=loc)
-    logger.info(f"=> loading checkpoint '{ckpt_name}'")
-    if checkpoint['avg_state_dict'] is not None:
-        model_load_state_dict(student_model, checkpoint['avg_state_dict'])
-    else:
-        model_load_state_dict(student_model, checkpoint['student_state_dict'])
 
-    finetune(args, labeled_loader, test_loader, student_model, criterion)
-
-    cuda.empty_cache()
+    return student_model
 
 
 def finetune(args, train_loader, test_loader, model, criterion) -> None:
@@ -640,7 +631,7 @@ def main(args):
     t_scaler = amp.GradScaler(enabled=args.amp)
     s_scaler = amp.GradScaler(enabled=args.amp)
 
-    # optionally resume from a checkpoint
+    # Optionally resume from a checkpoint
     if args.resume:
         if os.path.isfile(args.resume):
             logger.info(f"=> loading checkpoint '{args.resume}'")
@@ -698,7 +689,9 @@ def main(args):
 
     teacher_model.zero_grad()
     student_model.zero_grad()
-    train_loop(
+
+    # Train
+    student_model = train_loop(
         args,
         labeled_loader,
         unlabeled_loader,
@@ -713,7 +706,19 @@ def main(args):
         s_scheduler,
         t_scaler,
         s_scaler)
-    return
+
+    # Finetune
+    ckpt_name = f'{args.save_path}/{args.name}_best.pth.tar'
+    checkpoint = torch.load(ckpt_name, map_location=f'cuda:{args.gpu}')
+    logger.info(f"=> loading checkpoint '{ckpt_name}'")
+    if checkpoint['avg_state_dict'] is not None:
+        model_load_state_dict(student_model, checkpoint['avg_state_dict'])
+    else:
+        model_load_state_dict(student_model, checkpoint['student_state_dict'])
+
+    finetune(args, labeled_loader, test_loader, student_model, criterion)
+
+    cuda.empty_cache()
 
 
 if __name__ == '__main__':
