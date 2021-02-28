@@ -82,6 +82,11 @@ def get_args():
                         help='use it like this. --top-range 1 5')
 
     # Augument params --------------------------------------------------------
+    parser.add_argument('--img-size',
+                        nargs='+',
+                        default=[640, 640],
+                        type=int,
+                        help='img origin size [height, width]')
     parser.add_argument('--randaug',
                         nargs='+',
                         default=[2, 10],
@@ -213,6 +218,10 @@ def get_args():
                         default=1,
                         type=float,
                         help='warmup steps of lambda-u')
+    parser.add_argument('--student-wait-steps',
+                        default=0,
+                        type=int,
+                        help='warmup steps')
     parser.add_argument('--grad-clip',
                         default=0.,
                         type=float,
@@ -235,18 +244,24 @@ def set_seed(args):
 def get_cosine_schedule_with_warmup(optimizer,
                                     num_warmup_steps,
                                     num_training_steps,
+                                    num_wait_steps=0,
                                     num_cycles=0.5,
                                     last_epoch=-1):
     def lr_lambda(current_step):
-        if current_step < num_warmup_steps:
-            return float(current_step) / float(max(1, num_warmup_steps))
+        if current_step < num_wait_steps:
+            return 0.0
 
-        progress = float(current_step - num_warmup_steps) / \
-            float(max(1, num_training_steps - num_warmup_steps))
-        return max(0.0,
-                   0.5 * (1.0 + math.cos(
-                       math.pi *
-                       float(num_cycles) * 2.0 * progress)))
+        if current_step < num_warmup_steps + num_wait_steps:
+            return float(current_step) / \
+                float(max(1, num_warmup_steps + num_wait_steps))
+
+        t1 = float(current_step - num_warmup_steps - num_wait_steps)
+        t2 = float(
+            max(1, num_training_steps - num_warmup_steps - num_wait_steps))
+        progress = t1 / t2
+        val = 0.5 * (1.0 + math.cos(
+            math.pi * float(num_cycles) * 2.0 * progress))
+        return max(0.0, val)
 
     return LambdaLR(optimizer, lr_lambda, last_epoch)
 
@@ -347,13 +362,15 @@ def train_loop(
             date_time.update(time.time() - end)
 
             pbar.set_description(
-                f"Train Iter: {eval_cnt*args.eval_step+step+1:3}/{args.total_steps:3}. "
-                f"LR: {get_lr(s_optimizer):.4f}. "
-                f"Date: {date_time.sum:.2f}s. "
-                f"Batch: {batch_time.avg:.2f}s. "
-                f"S_Loss: {s_losses.avg:.4f}. "
-                f"T_Loss: {t_losses.avg:.4f}. "
-                f"Mask: {mean_mask.avg:.4f}. ")
+                "Train Iter: "
+                f"{eval_cnt*args.eval_step+step+1:3}/{args.total_steps:3}.")
+            pbar.set_postfix(
+                LR=f"{get_lr(s_optimizer):.4f}",
+                Date=f"{date_time.sum:.2f}s",
+                Batch=f"{batch_time.avg:.2f}s",
+                S_Loss=f"{s_losses.avg:.4f}",
+                T_Loss=f"{t_losses.avg:.4f}",
+                Mask=f"{mean_mask.avg:.4f}")
             pbar.update()
         pbar.close()
 
@@ -397,7 +414,8 @@ def train_loop(
 
             args.writer.add_scalar("test/loss", test_loss, args.num_eval)
             args.writer.add_scalar("test/acc@1", top1, args.num_eval)
-            args.writer.add_scalar("test/acc@5", top5, args.num_eval)
+            args.writer.add_scalar(
+                f"test/acc@{args.top_range}", top5, args.num_eval)
 
             is_best = top1 > args.best_top1
             if is_best:
@@ -574,7 +592,7 @@ def main(args):
 
     criterion = create_loss_fn(args)
 
-    no_decay = ['bn', 'bias']
+    no_decay = ['bn']
     teacher_parameters = [
         {
             'params': [p for n, p in teacher_model.named_parameters() if not any(
@@ -610,7 +628,10 @@ def main(args):
     t_scheduler = get_cosine_schedule_with_warmup(
         t_optimizer, args.warmup_steps, args.total_steps)
     s_scheduler = get_cosine_schedule_with_warmup(
-        s_optimizer, 0, args.total_steps)
+        s_optimizer,
+        args.warmup_steps,
+        args.total_steps,
+        args.student_wait_steps)
 
     t_scaler = amp.GradScaler(enabled=args.amp)
     s_scaler = amp.GradScaler(enabled=args.amp)
