@@ -484,7 +484,7 @@ def finetune(args, train_loader, test_loader, model, criterion) -> None:
 
             # Test
             test_loss, top1, top5 = evaluate(
-                args, test_loader, model, criterion)
+                args, test_loader, model, criterion, args.top_range)
             # Add log
             args.writer.add_scalar("finetune/test_loss", test_loss, epoch)
             args.writer.add_scalar("finetune/acc@1", top1, epoch)
