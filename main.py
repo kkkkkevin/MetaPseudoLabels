@@ -416,8 +416,7 @@ def train_loop(
 
             args.writer.add_scalar("test/loss", test_loss, args.num_eval)
             args.writer.add_scalar("test/acc@1", top1, args.num_eval)
-            args.writer.add_scalar(
-                f"test/acc@{args.top_range}", top5, args.num_eval)
+            args.writer.add_scalar("test/acc@5", top5, args.num_eval)
 
             is_best = top1 > args.best_top1
             if is_best:
