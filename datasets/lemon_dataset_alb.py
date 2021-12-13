@@ -1,4 +1,5 @@
 import math
+from albumentations.augmentations.transforms import VerticalFlip
 import numpy as np
 import pandas as pd
 import cv2
@@ -79,6 +80,8 @@ def x_u_split(
     unlabeled_idx = np.array(range(len(labels)))
     for i in range(num_classes):
         idx = np.where(labels == i)[0]
+        assert len(idx) >= label_per_class, \
+            "class_id:{i} of num is less than '(num_labels // num_classes)'"
         idx = np.random.choice(idx, label_per_class, False)
         labeled_idx.extend(idx)
     labeled_idx = np.array(labeled_idx)
@@ -151,6 +154,12 @@ class TransformMPL(object):
 def get_transforms_labeled(resize: int, mean: tuple, std: tuple) -> A.Compose:
     return A.Compose([
         A.HorizontalFlip(p=0.5),
+        A.VerticalFlip(p=0.5),
+        A.Rotate(
+            limit=180,
+            interpolation=1,
+            border_mode=4,
+            p=0.5),
         A.RandomCrop(
             height=resize,
             width=resize,
